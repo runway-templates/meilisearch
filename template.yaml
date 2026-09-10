@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/runway-templates/schema/refs/heads/main/v1alpha1.json
+apiVersion: schema.runway.horse/templates/v1alpha1
+kind: Template
+
+metadata:
+  name: meilisearch
+  version: 1.0.0
+  displayName: Meilisearch
+  description: |
+    Open-source search engine with typo tolerance, filtering, faceting, and
+    geosearch out of the box. Single instance with persistence on a volume.
+    Published on a public HTTPS route; every request needs an API key.
+  category: search
+  tags: [meilisearch, search, full-text, vector, ai]
+  logo: ./logo.svg
+  documentation: https://www.meilisearch.com/docs
+  website: https://www.meilisearch.com
+  source: https://github.com/meilisearch/meilisearch
+  license: MIT
+  maintainer: runway
+
+inputs:
+  image_tag:
+    type: string
+    default: "v1.53"
+    enum: ["v1.53", "v1.52", "v1.51"]
+    description: |
+      Meilisearch version — the 'v' prefix is upstream's convention. The index
+      format is tied to the version that wrote it, so a downgrade needs a dump
+      and restore.
+
+  environment:
+    type: string
+    default: "production"
+    enum: ["production", "development"]
+    description: |
+      'production' requires the master key and hides detailed errors.
+      'development' also serves the bundled search preview UI. Use
+      'production' for anything reachable from the internet.
+
+  no_analytics:
+    type: boolean
+    default: true
+    description: |
+      Do not send anonymous usage data to Meilisearch. On by default. Set to
+      false to opt back in to telemetry.
+
+services:
+  - name: meilisearch
+    image: "r.planetary-quantum.com/docker-hub-proxy/getmeili/meilisearch:${{ inputs.image_tag }}"
+
+    env:
+      PORT: "7700"
+      # Upstream default is loopback; the probe and route cannot reach it.
+      MEILI_HTTP_ADDR: "0.0.0.0:7700"
+      MEILI_ENV: "${{ inputs.environment }}"
+      MEILI_NO_ANALYTICS: "${{ inputs.no_analytics }}"
+
+      # All under the volume, so it survives restarts.
+      MEILI_DB_PATH: "/meili_data/data.ms"
+      MEILI_DUMP_DIR: "/meili_data/dumps"
+      MEILI_SNAPSHOT_DIR: "/meili_data/snapshots"
+
+      MEILI_MASTER_KEY:
+        value: "${{ runway.secret(64) }}"
+        description: |
+          Master key. Use it to mint scoped API keys — never ship it to a
+          browser or a mobile app.
+        warning: |
+          Every API key is derived from this value. Change it and all existing
+          keys stop working, so every client has to be re-keyed. It cannot be
+          recovered from the database.
+
+    volume:
+      mountPath: /meili_data
+
+    healthcheck:
+      type: http
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+
+    settings:
+      # Called from browsers; the master key gates every request.
+      route: true
+
+    # Indexes are memory-mapped; searches slow down once they outgrow RAM.
+    minPlan: scale-m-launch
