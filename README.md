@@ -19,19 +19,25 @@ WIP
 
 ## Connecting
 
-This one **is** routed: it gets a public HTTPS URL, because search is called
-from browsers and other apps. Every request needs an API key.
+This one **is** routed, because search is called from browsers and other
+apps. It gets a public HTTPS URL:
+
+```
+https://<app>.pqapp.dev
+```
+
+`<app>` is your app name. Every request needs an API key.
 
 The master key is in the app config as `MEILI_MASTER_KEY`:
 
 ```sh
-runway app config ls --app my-search
+runway app config ls --app <app>
 ```
 
 Use it to read the keys Meilisearch derives from it:
 
 ```sh
-curl -H "Authorization: Bearer <MEILI_MASTER_KEY>" https://my-search.example.com/keys
+curl -H "Authorization: Bearer <MEILI_MASTER_KEY>" https://<app>.pqapp.dev/keys
 ```
 
 That returns a default search key and a default admin key. Ship the **search**
