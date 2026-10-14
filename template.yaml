@@ -4,7 +4,7 @@ kind: Template
 
 metadata:
   name: meilisearch
-  version: 1.0.0
+  version: 0.1.0
   displayName: Meilisearch
   description: |
     Open-source search engine with typo tolerance, filtering, faceting, and
@@ -73,6 +73,11 @@ services:
 
     volume:
       mountPath: /meili_data
+
+    # the image has no user of its own and would run as root
+    runAs:
+      user: 1000
+      group: 1000
 
     healthcheck:
       type: http
