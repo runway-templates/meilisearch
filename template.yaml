@@ -4,7 +4,7 @@ kind: Template
 
 metadata:
   name: meilisearch
-  version: 0.1.0
+  version: 0.2.0
   displayName: Meilisearch
   description: |
     Open-source search engine with typo tolerance, filtering, faceting, and
@@ -78,6 +78,9 @@ services:
     runAs:
       user: 1000
       group: 1000
+
+    outputs:
+      URL: "http://${{ runway.internal_address }}"
 
     healthcheck:
       type: http

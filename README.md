@@ -17,6 +17,10 @@ WIP
 | `environment` | `production` | `development` also serves the search preview UI |
 | `no_analytics` | `true` | Telemetry is off; set to `false` to opt back in |
 
+## Outputs
+
+`URL`
+
 ## Connecting
 
 This one **is** routed, because search is called from browsers and other
